@@ -13,8 +13,20 @@ const io = socket(server);
 const publicDirectoryPath = path.join(__dirname, "../public");
 app.use(express.static(publicDirectoryPath));
 
-io.on("connection", () => {
+io.on("connection", (socket) => {
   console.log("New Websocket Connection!");
+
+  socket.emit("message", "Welcome to the chat app!");
+
+  socket.broadcast.emit("message", "A new user had joined!");
+
+  socket.on("sendMessage", (message) => {
+    io.emit("message", message);
+  });
+
+  socket.on("disconnect", () => {
+    io.emit("message", "A user had left!");
+  });
 });
 
 server.listen(PORT, () => {
