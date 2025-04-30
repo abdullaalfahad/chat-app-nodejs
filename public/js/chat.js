@@ -35,8 +35,6 @@ messageForm.addEventListener("submit", (e) => {
     messageFormButton.removeAttribute("disabled");
     messageFormInput.value = "";
     messageFormInput.focus();
-
-    console.log("Message delivered!");
   });
 });
 
