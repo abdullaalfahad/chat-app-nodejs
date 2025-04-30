@@ -2,6 +2,7 @@ const path = require("path");
 const http = require("http");
 const express = require("express");
 const socket = require("socket.io");
+const { generateMessages } = require("./utils/messages");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -16,22 +17,24 @@ app.use(express.static(publicDirectoryPath));
 io.on("connection", (socket) => {
   console.log("New Websocket Connection!");
 
-  socket.emit("message", "Welcome to the chat app!");
-
-  socket.broadcast.emit("message", "A new user had joined!");
+  socket.emit("message", generateMessages("Welcome!"));
+  socket.broadcast.emit("message", generateMessages("A new user had joined!"));
 
   socket.on("sendMessage", (message, callback) => {
-    io.emit("message", message);
+    io.emit("message", generateMessages(message));
     callback();
   });
 
   socket.on("sendLocation", (coords, callback) => {
-    io.emit("locationMessage", `https://google.com/maps?q=${coords.latitude},${coords.longitude}`);
+    io.emit("locationMessage", {
+      url: `https://google.com/maps?q=${coords.latitude},${coords.longitude}`,
+      createdAt: new Date().getTime(),
+    });
     callback();
   });
 
   socket.on("disconnect", () => {
-    io.emit("message", "A user had left!");
+    io.emit("message", generateMessages("A user has left!"));
   });
 });
 
