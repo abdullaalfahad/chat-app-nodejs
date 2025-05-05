@@ -15,10 +15,13 @@ const publicDirectoryPath = path.join(__dirname, "../public");
 app.use(express.static(publicDirectoryPath));
 
 io.on("connection", (socket) => {
-  console.log("New Websocket Connection!");
+  socket.on("join", ({ userName, room }) => {
+    console.log(`User ${userName} joined room ${room}`);
 
-  socket.emit("message", generateMessages("Welcome!"));
-  socket.broadcast.emit("message", generateMessages("A new user had joined!"));
+    socket.join(room);
+    socket.emit("message", generateMessages("Welcome!"));
+    socket.broadcast.to(room).emit("message", generateMessages(`${userName} has joined!`));
+  });
 
   socket.on("sendMessage", (message, callback) => {
     io.emit("message", generateMessages(message));
