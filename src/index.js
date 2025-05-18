@@ -3,6 +3,7 @@ const http = require("http");
 const express = require("express");
 const socket = require("socket.io");
 const { generateMessages } = require("./utils/messages");
+const { getUser, getUsersInRoom, addUser, removeUser } = require("./utils/users");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -15,12 +16,20 @@ const publicDirectoryPath = path.join(__dirname, "../public");
 app.use(express.static(publicDirectoryPath));
 
 io.on("connection", (socket) => {
-  socket.on("join", ({ userName, room }) => {
-    console.log(`User ${userName} joined room ${room}`);
+  socket.on("join", (options, callback) => {
+    const { error, user } = addUser({ id: socket.id, ...options });
 
-    socket.join(room);
+    if (error) {
+      return callback(error);
+    }
+
+    socket.join(user.room);
     socket.emit("message", generateMessages("Welcome!"));
-    socket.broadcast.to(room).emit("message", generateMessages(`${userName} has joined!`));
+    socket.broadcast
+      .to(user.room)
+      .emit("message", generateMessages(`${user.username} has joined!`));
+
+    callback();
   });
 
   socket.on("sendMessage", (message, callback) => {
@@ -37,7 +46,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    io.emit("message", generateMessages("A user has left!"));
+    const user = removeUser(socket.id);
+    if (user) {
+      io.to(user.room).emit("message", generateMessages(`${user.username} has left!`));
+    }
   });
 });
 

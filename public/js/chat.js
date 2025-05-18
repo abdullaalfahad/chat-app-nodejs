@@ -9,7 +9,7 @@ const messageTemplate = document.querySelector("#message-template").innerHTML;
 const locationMessageTemplate = document.querySelector("#location-message-template").innerHTML;
 
 const searchParams = new URLSearchParams(window.location.search);
-const userName = searchParams.get("username");
+const username = searchParams.get("username");
 const room = searchParams.get("room");
 
 socket.on("message", (message) => {
@@ -64,4 +64,9 @@ messageFormLocationButton.addEventListener("click", () => {
   });
 });
 
-socket.emit("join", { userName, room });
+socket.emit("join", { username, room }, (error) => {
+  if (error) {
+    alert(error);
+    location.href = "/";
+  }
+});
